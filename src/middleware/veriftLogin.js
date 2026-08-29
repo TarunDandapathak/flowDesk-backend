@@ -5,7 +5,7 @@ const verifyLogin = (req, res, next) => {
         const token = req.cookies.accessToken;
 
         // console.log("Cookies:", req.cookies);
-        // console.log("Token:", token);
+        console.log("Token:", token);
         // console.log(req);
         if (!token) {
             return res.status(401).json({
