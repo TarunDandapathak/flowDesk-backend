@@ -11,7 +11,7 @@ import cors from "cors";
 const app = express();
 
 app.use(cors({
-    origin: "http://localhost:5173",
+    origin: "https://flowdesk-ten-henna.vercel.app",
     credentials: true
 }));
 app.use(express.json());
