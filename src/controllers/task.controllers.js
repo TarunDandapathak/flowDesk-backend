@@ -6,15 +6,12 @@ import authControllers from "../models/auth.models.js";
 
 async function addTask(req, res) {
   try {
-    
     const { title, description, priority, status, dueDate } = req.body;
-    // console.log(title);
-
 
     if (!title || !priority) {
       return res.status(400).json({
         success: false,
-        message: "Title and priority are required"
+        message: "Title and priority are required",
       });
     }
 
@@ -23,85 +20,97 @@ async function addTask(req, res) {
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Token not found"
+        message: "Token not found",
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    // console.log(decoded)
-    const newTask = await new task({
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET_KEY
+    );
+
+    const newTask = new task({
       title,
       description,
       priority,
       status,
-      dueDate: dueDate || Date.now(),
-      createdBy: decoded.id
+      dueDate: dueDate ? new Date(dueDate) : new Date(),
+      createdBy: decoded.id,
     });
+
     await newTask.save();
 
     return res.status(201).json({
       success: true,
       message: "Task created successfully",
-      task
+      task: newTask,
     });
-
   } catch (err) {
     return res.status(500).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
 }
 
 async function editTask(req, res) {
-  // console.log(req.body);
-  // console.log(req.user);
   try {
     const { title, description, priority, status, dueDate } = req.body;
 
+    if (!title || !priority || !status || !dueDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Title, priority, status and due date are required",
+      });
+    }
 
-    const checkCorrectUser = await task.findOne({
+    const existingTask = await task.findOne({
       _id: req.params.id,
       createdBy: req.user.id,
     });
-    if (req.user.id.toString() === checkCorrectUser.createdBy.toString()) {
-      if (!title || !priority || !status || !dueDate) {
-        return res.status(400).json({
-          success: false,
-          message: "Title and priority are required"
-        });
 
+    if (!existingTask) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found or you are not authorized",
+      });
+    }
 
-      }
-      let completeDate = null;
-      // edited 
-      if (status == "done") {
-        completeDate = new Date();
-      }
-      const user = await task.findByIdAndUpdate(req.params.id, {
+    let completeDate = existingTask.completeDate;
+
+    if (status === "done" && existingTask.status !== "done") {
+      completeDate = new Date();
+    }
+
+    if (status !== "done") {
+      completeDate = null;
+    }
+
+    const updatedTask = await task.findByIdAndUpdate(
+      req.params.id,
+      {
         title,
         description,
         priority,
         status,
-        dueDate,
-        completeDate
-      });
+        dueDate: new Date(dueDate),
+        completeDate,
+      },
+      { new: true, runValidators: true }
+    );
 
-      return res.status(200).json({
-        success: true,
-        message: "Task edited successfully",
-
-      });
-    }
-
+    return res.status(200).json({
+      success: true,
+      message: "Task edited successfully",
+      task: updatedTask,
+    });
 
   } catch (err) {
     return res.status(500).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
-
 }
 
 async function deleteTask(req, res) {
