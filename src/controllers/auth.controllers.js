@@ -115,6 +115,7 @@ async function otpVerification(req, res) {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "strict",
+             maxAge: 5 * 24 * 60 * 60 * 1000,
             
         });
 
@@ -183,7 +184,7 @@ async function loginUser(req, res) {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
   sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-  maxAge: 15 * 60 * 1000
+  maxAge: 5 * 24 * 60 * 60 * 1000
 });
 
         return res.status(200).json({
