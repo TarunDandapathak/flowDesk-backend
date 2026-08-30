@@ -153,7 +153,7 @@ async function getData(req, res) {
       success: true,
       tasks
     });
-
+console.log(tasks);
   } catch (error) {
     // console.log(error);
 
